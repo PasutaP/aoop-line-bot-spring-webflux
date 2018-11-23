@@ -3,19 +3,28 @@ package com.example.lineapibackend.flexMessages;
 import com.example.lineapibackend.flexMessages.blocks.BodyBlock;
 import com.example.lineapibackend.flexMessages.blocks.HeroBlock;
 import com.linecorp.bot.model.message.FlexMessage;
+import com.linecorp.bot.model.message.flex.component.Box;
 import com.linecorp.bot.model.message.flex.component.Image;
 import com.linecorp.bot.model.message.flex.component.Text;
+import com.linecorp.bot.model.message.flex.container.Bubble;
 import com.linecorp.bot.model.message.flex.unit.FlexFontSize;
+import com.linecorp.bot.model.message.flex.unit.FlexLayout;
 
+import java.util.Collections;
 import java.util.function.Supplier;
 
-public class CancellationSuccessFlexMessageSupplier implements Supplier<FlexMessage>, HeroBlock<Image>, BodyBlock<Text> {
+public class CancellationSuccessFlexMessageSupplier implements Supplier<FlexMessage>, HeroBlock<Image>, BodyBlock<Box> {
     @Override
-    public Text createBodyBlock() {
-        return Text.builder()
-                .text("Cancellation Successful")
-                .size(FlexFontSize.XL)
-                .weight(Text.TextWeight.BOLD)
+    public Box createBodyBlock() {
+        return Box.builder()
+                .layout(FlexLayout.BASELINE)
+                .contents(Collections.singletonList(
+                        Text.builder()
+                                .text("Cancellation Successful")
+                                .size(FlexFontSize.XL)
+                                .weight(Text.TextWeight.BOLD)
+                                .build()
+                ))
                 .build();
     }
 
@@ -31,6 +40,11 @@ public class CancellationSuccessFlexMessageSupplier implements Supplier<FlexMess
 
     @Override
     public FlexMessage get() {
-        return null;
+        Bubble bubble = Bubble.builder()
+                .body(createBodyBlock())
+                .hero(createHeroBlock())
+                .build();
+
+        return new FlexMessage("Cancellation Success", bubble);
     }
 }
