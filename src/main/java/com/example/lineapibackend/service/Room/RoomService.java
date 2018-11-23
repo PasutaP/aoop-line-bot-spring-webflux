@@ -26,4 +26,6 @@ public interface RoomService {
     Flux<Room> findRoomsByAvailabilityAndType(boolean availability, String type);
 
     Mono<Integer> countRoomByAvailableRoomsByType(boolean availability, String type);
+
+    Flux<Room> findRoomsFromBookingByUserId(String bookingId);
 }

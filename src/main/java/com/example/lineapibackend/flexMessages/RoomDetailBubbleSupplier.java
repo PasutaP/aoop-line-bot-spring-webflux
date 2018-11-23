@@ -1,8 +1,13 @@
 package com.example.lineapibackend.flexMessages;
 
 import com.example.lineapibackend.entity.Room;
+import com.example.lineapibackend.entity.roomDetail.RoomDetail;
+import com.example.lineapibackend.flexMessages.blocks.BodyBlock;
+import com.example.lineapibackend.flexMessages.blocks.FooterBlock;
+import com.example.lineapibackend.flexMessages.blocks.HeroBlock;
 import com.linecorp.bot.model.action.Action;
 import com.linecorp.bot.model.action.MessageAction;
+import com.linecorp.bot.model.action.PostbackAction;
 import com.linecorp.bot.model.message.FlexMessage;
 import com.linecorp.bot.model.message.flex.component.*;
 import com.linecorp.bot.model.message.flex.container.Bubble;
@@ -13,14 +18,17 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.function.Supplier;
 
-public class RoomDetailBubbleSupplier implements Supplier<Bubble> {
+public class RoomDetailBubbleSupplier implements Supplier<Bubble>, HeroBlock<Image>, BodyBlock<Box>, FooterBlock<Box> {
 
-    private Room room;
+    private RoomDetail room;
     private Integer remainingRooms;
+    private Date startDate;
+    private Date endDate;
 
-    public RoomDetailBubbleSupplier(Room room, Integer remainingRooms) {
+    public RoomDetailBubbleSupplier(RoomDetail room, Integer remainingRooms) {
         this.room = room;
         this.remainingRooms = remainingRooms;
     }
@@ -38,7 +46,7 @@ public class RoomDetailBubbleSupplier implements Supplier<Bubble> {
                 .build();
     }
 
-    private Image createHeroBlock() {
+    public Image createHeroBlock() {
         return Image.builder()
                 .url(this.room.getRoomImageUrl())
                 .size(Image.ImageSize.FULL_WIDTH)
@@ -47,16 +55,16 @@ public class RoomDetailBubbleSupplier implements Supplier<Bubble> {
                 .build();
     }
 
-    private Box createBodyBlock() {
+    public Box createBodyBlock() {
         return Box.builder()
                 .layout(FlexLayout.VERTICAL)
                 .flex(0)
                 .spacing(FlexMarginSize.NONE)
                 .contents(Arrays.asList(
                         Text.builder()
-                                .text(this.room.getType())
+                                .text(this.room.getRoomType())
                                 .margin(FlexMarginSize.NONE)
-                                .size(FlexFontSize.XXL)
+                                .size(FlexFontSize.XL)
                                 .align(FlexAlign.START)
                                 .gravity(FlexGravity.CENTER)
                                 .weight(Text.TextWeight.BOLD)
@@ -81,7 +89,7 @@ public class RoomDetailBubbleSupplier implements Supplier<Bubble> {
                                 ))
                                 .build(),
                         Text.builder()
-                                .text(String.format("%.2f", this.room.getPrice())) //Room price
+                                .text(String.format("THB %.2f", this.room.getPrice())) //Room price
                                 .flex(10)
                                 .margin(FlexMarginSize.NONE)
                                 .size(FlexFontSize.XL)
@@ -99,16 +107,17 @@ public class RoomDetailBubbleSupplier implements Supplier<Bubble> {
                 .build();
     }
 
-    private Box createFooterBlock() {
+    public Box createFooterBlock() {
         return Box.builder()
                 .layout(FlexLayout.VERTICAL)
                 .spacing(FlexMarginSize.SM)
                 .contents(Collections.singletonList(
                         Button.builder()
-                                .action(new MessageAction(
-                                        "Reserve",
-                                        "Reserve"
-                                ))
+                                .action(PostbackAction.builder()
+                                        .data(String.format("action=reserve&roomType=%s", room.getRoomType()))
+                                        .label("Reservation")
+                                        .build()
+                                )
                                 .flex(2)
                                 .color("#DF8D5F")
                                 .style(Button.ButtonStyle.PRIMARY)

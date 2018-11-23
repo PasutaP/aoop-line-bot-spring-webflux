@@ -1,6 +1,7 @@
 package com.example.lineapibackend.service.Booking;
 
 import com.example.lineapibackend.entity.Booking;
+import com.example.lineapibackend.entity.Room;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -20,4 +21,5 @@ public interface BookingService {
     Mono<Boolean> delete(String id);
 
     Flux<Booking> findByUserId(String userId);
+
 }

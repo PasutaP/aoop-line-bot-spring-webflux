@@ -1,5 +1,7 @@
 package com.example.lineapibackend.flexMessages;
 
+import com.example.lineapibackend.flexMessages.blocks.BodyBlock;
+import com.example.lineapibackend.flexMessages.blocks.HeroBlock;
 import com.linecorp.bot.model.message.FlexMessage;
 import com.linecorp.bot.model.message.flex.component.Box;
 import com.linecorp.bot.model.message.flex.component.Image;
@@ -11,7 +13,7 @@ import com.linecorp.bot.model.message.flex.unit.FlexLayout;
 import java.util.Collections;
 import java.util.function.Supplier;
 
-public class CheckInSuccessFlexMessageSupplier implements Supplier<FlexMessage> {
+public class CheckInSuccessFlexMessageSupplier implements Supplier<FlexMessage>, BodyBlock<Box>, HeroBlock<Image> {
     @Override
     public FlexMessage get() {
         final Image heroBlock = createHeroBlock();
@@ -24,7 +26,7 @@ public class CheckInSuccessFlexMessageSupplier implements Supplier<FlexMessage> 
         return new FlexMessage("Check-In success", bubble);
     }
 
-    private Image createHeroBlock() {
+    public Image createHeroBlock() {
         return Image
                 .builder()
                 .url("https://firebasestorage.googleapis.com/v0/b/aoop-project-d1add.appspot.com/o/RoomType%2FHomeless-09.png?alt=media&token=2e70ccf0-d8df-4944-8d62-8ad598e87bca")
@@ -34,7 +36,7 @@ public class CheckInSuccessFlexMessageSupplier implements Supplier<FlexMessage> 
                 .build();
     }
 
-    private Box createBodyBlock() {
+    public Box createBodyBlock() {
         return Box
                 .builder()
                 .layout(FlexLayout.VERTICAL)

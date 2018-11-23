@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 
 @Service
@@ -50,12 +52,9 @@ public class RoomServiceImpl implements RoomService {
         return roomRepository.findById(id);
     }
 
-
     @Override
     public Flux<Room> findAvailableRoomByDateRange(Date startDate, Date endDate) {
-        return bookingService.findByRange(startDate, endDate)
-                .flatMap(booking -> Flux.fromIterable(booking.getRoomList()))
-                .flatMap(roomRepository::findById);
+        return null;
     }
 
     @Override
@@ -82,5 +81,10 @@ public class RoomServiceImpl implements RoomService {
     @Override
     public Mono<Integer> countRoomByAvailableRoomsByType(boolean availability, String type) {
         return roomRepository.countRoomsByAvailabilityAndType(true, type);
+    }
+
+    @Override
+    public Flux<Room> findRoomsFromBookingByUserId(String userId) {
+        return null;
     }
 }

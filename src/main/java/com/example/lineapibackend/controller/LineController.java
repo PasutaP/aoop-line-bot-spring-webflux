@@ -2,19 +2,17 @@ package com.example.lineapibackend.controller;
 
 import com.example.lineapibackend.entity.Booking;
 import com.example.lineapibackend.entity.Room;
-import com.example.lineapibackend.flexMessages.CheckInFailFlexMessageSupplier;
-import com.example.lineapibackend.flexMessages.CheckInSuccessFlexMessageSupplier;
+import com.example.lineapibackend.entity.roomDetail.RoomDetailFactory;
+import com.example.lineapibackend.flexMessages.*;
 import com.example.lineapibackend.entity.User;
-import com.example.lineapibackend.flexMessages.RoomDetailBubbleSupplier;
-import com.example.lineapibackend.flexMessages.RoomManageBubbleSupplier;
+import com.example.lineapibackend.flexMessages.RoomManagingDetail.RoomManagingDetailBubbleSupplier;
+import com.example.lineapibackend.quickReply.DatetimePickerSupplier;
 import com.example.lineapibackend.service.Booking.BookingService;
 import com.example.lineapibackend.service.Room.RoomService;
-import com.example.lineapibackend.service.User.UserService;
+import com.example.lineapibackend.utils.RoomTypes;
 import com.linecorp.bot.client.LineMessagingClient;
 import com.linecorp.bot.model.PushMessage;
 import com.linecorp.bot.model.ReplyMessage;
-import com.linecorp.bot.model.action.DatetimePickerAction;
-import com.linecorp.bot.model.action.PostbackAction;
 import com.linecorp.bot.model.event.Event;
 import com.linecorp.bot.model.event.FollowEvent;
 import com.linecorp.bot.model.event.MessageEvent;
@@ -41,11 +39,13 @@ import reactor.core.publisher.Mono;
 
 import javax.validation.constraints.NotNull;
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
 import java.net.URLDecoder;
-import java.security.URIParameter;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
 
 @Slf4j
 @LineMessageHandler
@@ -56,16 +56,15 @@ public class LineController {
 
     private final LineMessagingClient lineMessagingClient;
 
-    private final UserService userService;
-
     private final RoomService roomService;
 
     private final BookingService bookingService;
 
+    private HashMap<String, HashMap<String, String>> bookingDateCache = new HashMap<>();
+
     @Autowired
-    public LineController(LineMessagingClient lineMessagingClient, UserService userService, RoomService roomService, BookingService bookingService) {
+    public LineController(LineMessagingClient lineMessagingClient, RoomService roomService, BookingService bookingService) {
         this.lineMessagingClient = lineMessagingClient;
-        this.userService = userService;
         this.roomService = roomService;
         this.bookingService = bookingService;
     }
@@ -108,17 +107,107 @@ public class LineController {
     }
 
     @EventMapping
-    public void handlePostbackAction(PostbackEvent event) throws UnsupportedEncodingException {
+    public void handlePostbackAction(PostbackEvent event) throws UnsupportedEncodingException, ParseException {
         logger.debug(TAG + splitQuery(event.getPostbackContent().getData()));
+        logger.debug(TAG + event.getPostbackContent().getParams());
+
         Map<String, String> queryString = this.splitQuery(event.getPostbackContent().getData());
         final String userId = event.getSource().getUserId();
+        String action = queryString.get("action");
 
-        if(queryString.get("action").equals("cancel-booking")) {
-            String bookingId = queryString.get("bookingId");
-            bookingService.delete(bookingId)
-                .subscribe();
-            this.push(userId, new TextMessage("Delete Success"));
+
+        switch (action) {
+            case "cancel-booking": {
+                String bookingId = queryString.get("bookingId");
+                bookingService.delete(bookingId)
+                        .subscribe();
+                this.push(userId, new CancellationSuccessFlexMessageSupplier().get());
+                break;
+            }
+            case "submit-check-in-date": {
+                String date = event.getPostbackContent().getParams().get("date");
+                HashMap<String, String> checkInDate = new HashMap<>();
+                checkInDate.put("check-in-date", date);
+                this.bookingDateCache.put(userId, checkInDate);
+                this.push(userId, new TextMessage("Check-in: " + date));
+                this.push(userId, new DatetimePickerSupplier().getCheckOutQuickReply());
+                return;
+            }
+
+            case "submit-check-out-date": {
+                String date = event.getPostbackContent().getParams().get("date");
+                this.push(userId, new TextMessage("Check-out: " + date));
+                this.bookingDateCache.get(userId).put("check-out-date", date);
+
+                this.push(userId, new TextMessage("Loading Room List ..."));
+//                TODO: Continue on room displaying
+
+                HashMap<String, Integer> typeCount = new HashMap<>();
+
+                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                Date startDate = dateFormat.parse(bookingDateCache.get(userId).get("check-in-date"));
+                Date endDate = dateFormat.parse(bookingDateCache.get(userId).get("check-out-date"));
+
+
+                bookingService.findAll()
+                        .filter(booking -> !booking.getCheckInDate().before(endDate) && !booking.getCheckOutDate().before(startDate))
+                        .flatMap(booking -> {
+                            logger.debug(TAG + "BOOKING: " + booking.toString());
+                            return Flux.just(booking);
+                        });
+
+                roomService.findAll()
+                        .flatMap(room -> {
+                            typeCount.put(room.getType(), typeCount.getOrDefault(room.getType(), 0) + 1);
+                            return Flux.just(room);
+                        })
+                        .blockLast();
+
+                Flux.fromArray(RoomTypes.values())
+                        .flatMap(roomTypes -> Flux.just(RoomDetailFactory.getRoomDetail(roomTypes.toString())))
+                        .flatMap(roomDetail -> {
+                            logger.debug(TAG + "ROOM_IMAGE_DEBUG: " + roomDetail.getRoomImageUrl());
+                            return Flux.just(roomDetail);
+                        })
+                        .flatMap(roomDetail -> Flux.just(new RoomDetailBubbleSupplier(roomDetail, typeCount.getOrDefault(roomDetail.getRoomType(), 0)).get()))
+                        .collectList()
+                        .subscribe(roomBubbleList -> {
+                            if (!roomBubbleList.isEmpty()) {
+                                this.push(event.getSource().getUserId(),
+                                        new FlexMessage("Room List",
+                                                Carousel
+                                                        .builder()
+                                                        .contents(roomBubbleList)
+                                                        .build()
+                                        ));
+                            } else {
+                                this.push(event.getSource().getUserId(), new NoBookingFlexMessageSupplier().get());
+                            }
+                        });
+                return;
+            }
+            case "reserve": {
+                logger.debug(TAG + "RESERVE: " + event);
+
+                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                Date startDate = dateFormat.parse(bookingDateCache.get(userId).get("check-in-date"));
+                Date endDate = dateFormat.parse(bookingDateCache.get(userId).get("check-out-date"));
+//                Booking newBooking = new Booking(startDate, endDate, )
+                Room room = roomService.findFirstByType(queryString.get("roomType")).block();
+
+                if (room != null) {
+                    logger.debug(TAG + "ROOMTYPE_DEBUG: " + room);
+                    bookingService.createBooking(new Booking(startDate, endDate, room, userId))
+                            .subscribe(booking -> this.push(userId, new SummaryFlexMessageSupplier(booking).get()));
+                }
+
+                break;
+            }
+            default:
+                this.push(userId, new TextMessage("This the end"));
         }
+
+
     }
 
     private void handleTextContent(String replyToken, Event event, TextMessageContent content) throws InterruptedException {
@@ -127,27 +216,6 @@ public class LineController {
         logger.debug(TAG + ": Got text message from %s : %s", replyToken, text);
 
         switch (text) {
-            case "create user": {
-                String userId = event.getSource().getUserId();
-                if (userId != null) {
-                    lineMessagingClient.getProfile(userId)
-                            .whenComplete((profile, throwable) -> {
-                                if (throwable != null) {
-                                    this.replyText(replyToken, throwable.getMessage());
-                                    return;
-                                }
-                                User user = new User(profile.getDisplayName(), profile.getPictureUrl(), profile.getUserId());
-                                userService.createUser(user)
-                                        .subscribe(userDetail ->
-                                                this.reply(replyToken, Arrays.asList(
-                                                        new TextMessage("Display name: " + userDetail.getName()),
-                                                        new TextMessage("User ID: " + userDetail.getUserId()),
-                                                        new ImageMessage(userDetail.getPictureUrl(), userDetail.getPictureUrl())))
-                                        );
-                            });
-                }
-                break;
-            }
 
             case "check-in-failed": {
                 logger.debug(TAG + ": check-in-fail");
@@ -161,51 +229,35 @@ public class LineController {
             }
 
             case "Book a room": {
-                logger.debug(TAG + "carousel test");
+                logger.debug(TAG + ": Book a room");
 
-                HashMap<String, Integer> typeCount = new HashMap<>();
-
-                roomService.findAll()
-                        .subscribe(room -> typeCount.put(room.getType(), typeCount.getOrDefault(room.getType(), 0) + 1));
-
-                logger.debug(typeCount.toString());
-
-                this.push(event.getSource().getUserId(), new FlexMessage("Room Types", Carousel.builder()
-                        .contents(
-                                roomService.findAll()
-                                        .collectMap(Room::getType, room -> room)
-                                        .map(Map::values)
-                                        .flux()
-                                        .flatMap(Flux::fromIterable)
-                                        .flatMap(room -> Flux.just(new RoomDetailBubbleSupplier(room, typeCount.getOrDefault(room.getType(), 0)).get()))
-
-                                        .collectList()
-                                        .block()
-                        ).build()
-                ));
-
+                this.push(event.getSource().getUserId(), new DatetimePickerSupplier().getCheckInQuickReply());
                 return;
             }
 
+//            DONE
             case "Manage Booking": {
-//                TODO: Still using mocking, needed tests.
                 logger.debug(TAG + ": Manage Booking");
 
+                this.replyText(replyToken, "Loading your booking list ...");
                 String userId = event.getSource().getUserId();
-                Room room = roomService.findAll()
-                        .blockFirst();
 
-                Booking booking = bookingService.findByUserId(userId)
-                        .blockFirst();
+                bookingService.findByUserId(userId)
+                        .flatMap(booking -> Flux.just(new RoomManagingDetailBubbleSupplier(booking).get()))
+                        .collectList()
+                        .subscribe(bookingList -> {
+                            if (!bookingList.isEmpty()) {
+                                this.push(userId,
+                                        new FlexMessage("Manage Booking",
+                                                Carousel
+                                                        .builder()
+                                                        .contents(bookingList)
+                                                        .build()));
 
-                logger.debug(TAG + booking);
-
-                assert booking == null;
-                this.push(event.getSource().getUserId(), new FlexMessage("Manage Booking", Carousel.builder()
-                        .contents(Collections.singletonList(
-                                new RoomManageBubbleSupplier(room, booking).get()
-                        ))
-                        .build()));
+                            } else {
+                                this.push(userId, new NoBookingFlexMessageSupplier().get());
+                            }
+                        });
                 return;
             }
 

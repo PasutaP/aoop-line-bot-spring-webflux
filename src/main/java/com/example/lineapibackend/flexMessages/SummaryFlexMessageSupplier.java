@@ -2,8 +2,13 @@ package com.example.lineapibackend.flexMessages;
 
 import com.example.lineapibackend.entity.Booking;
 import com.example.lineapibackend.entity.Room;
-import com.linecorp.bot.model.action.PostbackAction;
-import com.linecorp.bot.model.message.flex.component.*;
+import com.example.lineapibackend.flexMessages.blocks.BodyBlock;
+import com.example.lineapibackend.flexMessages.blocks.HeroBlock;
+import com.linecorp.bot.model.message.FlexMessage;
+import com.linecorp.bot.model.message.flex.component.Box;
+import com.linecorp.bot.model.message.flex.component.Icon;
+import com.linecorp.bot.model.message.flex.component.Separator;
+import com.linecorp.bot.model.message.flex.component.Text;
 import com.linecorp.bot.model.message.flex.container.Bubble;
 import com.linecorp.bot.model.message.flex.unit.FlexAlign;
 import com.linecorp.bot.model.message.flex.unit.FlexFontSize;
@@ -15,64 +20,39 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.function.Supplier;
 
-public class RoomManageBubbleSupplier implements Supplier<Bubble> {
-    @Override
-    public Bubble get() {
-        return Bubble.builder()
-                .hero(createHeroBlock())
-                .body(createBodyBlock())
-                .footer(createFooterBlock())
-                .build();
-    }
+public class SummaryFlexMessageSupplier implements Supplier<FlexMessage>, BodyBlock<Box> {
 
     private Room room;
     private Booking booking;
 
-    public RoomManageBubbleSupplier(Room room, Booking booking) {
-        this.room = room;
+    public SummaryFlexMessageSupplier(Booking booking) {
+        this.room = booking.getBookedRoom();
         this.booking = booking;
     }
 
-    private Image createHeroBlock() {
-        return Image.builder()
-                .url(room.getRoomImageUrl())
-                .size(Image.ImageSize.FULL_WIDTH)
-                .aspectRatio(Image.ImageAspectRatio.R20TO13)
-                .aspectMode(Image.ImageAspectMode.Cover)
-                .build();
-    }
-
-    private Box createBodyBlock() {
+    @Override
+    public Box createBodyBlock() {
         return Box.builder()
                 .layout(FlexLayout.VERTICAL)
                 .spacing(FlexMarginSize.NONE)
                 .contents(Arrays.asList(
                         Text.builder()
-                                .text(this.room.getType())
-                                .size(FlexFontSize.XXL)
+                                .text("You have just booked!")
+                                .size(FlexFontSize.LG)
+                                .color("#DF8B5F")
                                 .weight(Text.TextWeight.BOLD)
                                 .build(),
-                        Box.builder()
-                                .layout(FlexLayout.BASELINE)
-                                .spacing(FlexMarginSize.SM)
-                                .contents(Arrays.asList(
-                                        Icon.builder()
-                                                .url("https://firebasestorage.googleapis.com/v0/b/aoop-project-d1add.appspot.com/o/RoomType%2Fuser-01.png?alt=media&token=464c9859-3df8-45e8-948f-6b73e8d29060")
-                                                .margin(FlexMarginSize.NONE)
-                                                .size(FlexFontSize.XL)
-                                                .build(),
-                                        Text.builder()
-                                                .text(String.format("%d", this.room.getSleeps()))
-                                                .flex(0)
-                                                .margin(FlexMarginSize.MD)
-                                                .align(FlexAlign.END)
-                                                .wrap(false)
-                                                .build()
-                                ))
+                        Text.builder()
+                                .text(this.room.getType())
+                                .size(FlexFontSize.XL)
+                                .weight(Text.TextWeight.BOLD)
                                 .build(),
                         Text.builder()
                                 .text(String.format("THB %.2f", this.room.getPrice()))
                                 .size(FlexFontSize.LG)
+                                .build(),
+                        Separator.builder()
+                                .margin(FlexMarginSize.MD)
                                 .build(),
                         Box.builder()
                                 .layout(FlexLayout.BASELINE)
@@ -107,26 +87,20 @@ public class RoomManageBubbleSupplier implements Supplier<Bubble> {
                                                 .color("#000000")
                                                 .build()
                                 ))
+                                .build(),
+                        Separator.builder()
+                                .margin(FlexMarginSize.MD)
                                 .build()
-
                 ))
                 .build();
     }
 
-    private Box createFooterBlock() {
-        return Box.builder()
-                .layout(FlexLayout.VERTICAL)
-                .contents(Collections.singletonList(
-                        Button.builder()
-                                .action(new PostbackAction(
-                                        "Cancel Booking"
-                                        , String.format("action=cancel-booking&userId=%s&bookingId=%s", booking.getBookedByUserId(), booking.getId()
-                                        , "Canceling: " + booking.getId())
-                                ))
-                                .color("#DF8D5F")
-                                .style(Button.ButtonStyle.PRIMARY)
-                                .build()
-                ))
+
+    @Override
+    public FlexMessage get() {
+        final Bubble bubble = Bubble.builder()
+                .body(createBodyBlock())
                 .build();
+        return new FlexMessage("Booking Summary", bubble);
     }
 }

@@ -17,11 +17,19 @@ public class Booking {
     public Date checkInDate;
     public Date checkOutDate;
     public double totalPrice;
-    public List<String> roomList;
+    public Room bookedRoom;
 
     public Booking() {
         this.createdDate = Calendar.getInstance().getTime();
-        this.roomList = new ArrayList<>();
+    }
+
+    public Booking(Date checkInDate, Date checkOutDate, Room bookedRoom, String userId) {
+        this();
+        this.checkInDate = checkInDate;
+        this.checkOutDate = checkOutDate;
+        this.totalPrice = bookedRoom.getPrice();
+        this.bookedByUserId = userId;
+        this.bookedRoom = bookedRoom;
     }
 
     public String getBookedByUserId() {
@@ -30,14 +38,6 @@ public class Booking {
 
     public void setBookedByUserId(String bookedByUserId) {
         this.bookedByUserId = bookedByUserId;
-    }
-
-    public Date getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(Date createdDate) {
-        this.createdDate = createdDate;
     }
 
     public String getId() {
@@ -72,11 +72,11 @@ public class Booking {
         this.totalPrice = totalPrice;
     }
 
-    public List<String> getRoomList() {
-        return roomList;
+    public Room getBookedRoom() {
+        return bookedRoom;
     }
 
-    public void setRoomList(List<String> roomList) {
-        this.roomList = roomList;
+    public void setBookedRoom(Room bookedRoom) {
+        this.bookedRoom = bookedRoom;
     }
 }

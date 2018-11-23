@@ -1,7 +1,9 @@
 package com.example.lineapibackend.controller;
 
 import com.example.lineapibackend.entity.Booking;
+import com.example.lineapibackend.entity.Room;
 import com.example.lineapibackend.service.Booking.BookingService;
+import com.example.lineapibackend.service.Room.RoomService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,9 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import javax.validation.constraints.NotEmpty;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 
 @Slf4j
@@ -23,11 +23,13 @@ public class BookingController {
     private static final String TAG = "BookingController";
     private Logger logger = LoggerFactory.getLogger(RoomController.class);
 
+    private final RoomService roomService;
 
     private final BookingService bookingService;
 
     @Autowired
-    public BookingController(BookingService bookingService) {
+    public BookingController(RoomService roomService, BookingService bookingService) {
+        this.roomService = roomService;
         this.bookingService = bookingService;
     }
 
@@ -65,12 +67,18 @@ public class BookingController {
     @PostMapping(value = "/mock")
     public Mono<Booking> mockBooking() {
         logger.debug(TAG + ": Mock Booking");
-        Booking newBooking = new Booking();
-        newBooking.setBookedByUserId("Uaa2206bc051835dedc525d86e592908b");
-        newBooking.setCheckInDate(new GregorianCalendar(2018, Calendar.FEBRUARY, 11).getTime());
-        newBooking.setCheckOutDate(new GregorianCalendar(2018, Calendar.FEBRUARY, 15).getTime());
-        logger.debug(TAG + ": Booking created - " + newBooking);
-        return bookingService.createBooking(newBooking);
+
+        return roomService.findFirstByType("Double Room")
+                .flatMap(room -> {
+                    Booking newBooking = new Booking();
+                    newBooking.setBookedByUserId("Uaa2206bc051835dedc525d86e592908b");
+                    newBooking.setBookedRoom(room);
+                    newBooking.setCheckInDate(new GregorianCalendar().getTime());
+                    newBooking.setCheckOutDate(new GregorianCalendar(2019, GregorianCalendar.JULY,1).getTime());
+                    logger.debug(TAG + ": Booking created - " + newBooking);
+                    return Mono.just(newBooking);
+                }).flatMap(bookingService::createBooking);
+
     }
 
 }
