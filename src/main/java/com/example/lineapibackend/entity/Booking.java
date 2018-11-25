@@ -18,6 +18,7 @@ public class Booking {
     public Date checkOutDate;
     public double totalPrice;
     public Room bookedRoom;
+    public Boolean checkInStatus;
 
     public Booking() {
         this.createdDate = Calendar.getInstance().getTime();
@@ -30,6 +31,15 @@ public class Booking {
         this.totalPrice = bookedRoom.getPrice();
         this.bookedByUserId = userId;
         this.bookedRoom = bookedRoom;
+        this.checkInStatus = false;
+    }
+
+    public Boolean getCheckInStatus() {
+        return checkInStatus;
+    }
+
+    public void setCheckInStatus(Boolean checkInStatus) {
+        this.checkInStatus = checkInStatus;
     }
 
     public String getBookedByUserId() {

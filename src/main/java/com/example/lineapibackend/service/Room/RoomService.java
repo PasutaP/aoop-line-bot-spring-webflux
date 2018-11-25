@@ -5,6 +5,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Date;
+import java.util.List;
 
 public interface RoomService {
     Mono<Room> createRoom(Room room);
@@ -28,4 +29,6 @@ public interface RoomService {
     Mono<Integer> countRoomByAvailableRoomsByType(boolean availability, String type);
 
     Flux<Room> findRoomsFromBookingByUserId(String bookingId);
+
+    public Flux<Room> findRoomsNotInRoomList(List<Room> rooms);
 }

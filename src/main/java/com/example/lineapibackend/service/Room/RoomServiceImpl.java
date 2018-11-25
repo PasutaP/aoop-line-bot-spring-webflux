@@ -1,5 +1,6 @@
 package com.example.lineapibackend.service.Room;
 
+import com.example.lineapibackend.entity.Booking;
 import com.example.lineapibackend.entity.Room;
 import com.example.lineapibackend.repository.BookingRepository;
 import com.example.lineapibackend.repository.RoomRepository;
@@ -9,9 +10,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 
 @Service
@@ -83,8 +82,17 @@ public class RoomServiceImpl implements RoomService {
         return roomRepository.countRoomsByAvailabilityAndType(true, type);
     }
 
+//    TODO: delete this method
     @Override
     public Flux<Room> findRoomsFromBookingByUserId(String userId) {
         return null;
     }
+
+    @Override
+    public Flux<Room> findRoomsNotInRoomList(List<Room> rooms) {
+        return roomRepository.findAll()
+                .filter(room -> !rooms.contains(room))
+                .flatMap(Flux::just);
+    }
+
 }

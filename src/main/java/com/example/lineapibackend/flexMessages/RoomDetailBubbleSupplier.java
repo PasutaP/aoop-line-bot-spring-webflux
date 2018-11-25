@@ -25,8 +25,6 @@ public class RoomDetailBubbleSupplier implements Supplier<Bubble>, HeroBlock<Ima
 
     private RoomDetail room;
     private Integer remainingRooms;
-    private Date startDate;
-    private Date endDate;
 
     public RoomDetailBubbleSupplier(RoomDetail room, Integer remainingRooms) {
         this.room = room;

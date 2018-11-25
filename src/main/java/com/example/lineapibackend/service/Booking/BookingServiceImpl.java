@@ -24,11 +24,9 @@ public class BookingServiceImpl implements BookingService {
         return bookingRepository.insert(booking);
     }
 
-//    TODO: Resolve this magic
     @Override
     public Mono<Booking> updateBooking(Booking booking, String id) {
-        return findById(id)
-                .doOnSuccess(bookingRepository::save)
+        return bookingRepository.save(booking)
                 .switchIfEmpty(Mono.error(new Exception("No booking found with id: " + id)));
     }
 
@@ -62,6 +60,5 @@ public class BookingServiceImpl implements BookingService {
                 .flatMap(booking -> Mono.just(Boolean.TRUE))
                 .doOnError(booking -> Mono.just(Boolean.FALSE));
     }
-
 
 }

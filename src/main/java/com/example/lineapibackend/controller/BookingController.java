@@ -46,6 +46,12 @@ public class BookingController {
         return bookingService.findById(id);
     }
 
+    @GetMapping(value = "/", params = {"userId"})
+    public Flux<Booking> findByUserId(@RequestParam String userId) {
+        logger.debug(TAG + ": Find booking by userId - " + userId);
+        return bookingService.findByUserId(userId);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<Booking> createBooking(@RequestBody Booking booking) {
