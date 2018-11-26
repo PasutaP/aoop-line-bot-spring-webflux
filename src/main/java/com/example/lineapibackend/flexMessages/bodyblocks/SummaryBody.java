@@ -1,15 +1,10 @@
-package com.example.lineapibackend.flexMessages;
+package com.example.lineapibackend.flexMessages.bodyblocks;
 
 import com.example.lineapibackend.entity.Booking;
 import com.example.lineapibackend.entity.Room;
-import com.example.lineapibackend.flexMessages.blocks.BodyBlock;
-import com.example.lineapibackend.flexMessages.blocks.HeroBlock;
-import com.linecorp.bot.model.message.FlexMessage;
 import com.linecorp.bot.model.message.flex.component.Box;
-import com.linecorp.bot.model.message.flex.component.Icon;
 import com.linecorp.bot.model.message.flex.component.Separator;
 import com.linecorp.bot.model.message.flex.component.Text;
-import com.linecorp.bot.model.message.flex.container.Bubble;
 import com.linecorp.bot.model.message.flex.unit.FlexAlign;
 import com.linecorp.bot.model.message.flex.unit.FlexFontSize;
 import com.linecorp.bot.model.message.flex.unit.FlexLayout;
@@ -17,17 +12,17 @@ import com.linecorp.bot.model.message.flex.unit.FlexMarginSize;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.function.Supplier;
 
-public class SummaryFlexMessageSupplier implements Supplier<FlexMessage>, BodyBlock<Box> {
+@BodyBlockImplementation(value = "summary-body")
+public class SummaryBody implements BodyBlock<Box> {
 
     private Room room;
     private Booking booking;
 
-    public SummaryFlexMessageSupplier(Booking booking) {
-        this.room = booking.getBookedRoom();
+    public Box createBodyBlock(Booking booking) {
         this.booking = booking;
+        this.room = booking.getBookedRoom();
+        return this.createBodyBlock();
     }
 
     @Override
@@ -93,14 +88,5 @@ public class SummaryFlexMessageSupplier implements Supplier<FlexMessage>, BodyBl
                                 .build()
                 ))
                 .build();
-    }
-
-
-    @Override
-    public FlexMessage get() {
-        final Bubble bubble = Bubble.builder()
-                .body(createBodyBlock())
-                .build();
-        return new FlexMessage("Booking Summary", bubble);
     }
 }

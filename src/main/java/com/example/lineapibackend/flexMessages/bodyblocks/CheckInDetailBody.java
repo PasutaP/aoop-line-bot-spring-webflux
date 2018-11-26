@@ -1,13 +1,9 @@
-package com.example.lineapibackend.flexMessages;
+package com.example.lineapibackend.flexMessages.bodyblocks;
 
 import com.example.lineapibackend.entity.Booking;
 import com.example.lineapibackend.entity.Room;
-import com.linecorp.bot.model.action.PostbackAction;
 import com.linecorp.bot.model.message.flex.component.Box;
-import com.linecorp.bot.model.message.flex.component.Button;
-import com.linecorp.bot.model.message.flex.component.Image;
 import com.linecorp.bot.model.message.flex.component.Text;
-import com.linecorp.bot.model.message.flex.container.Bubble;
 import com.linecorp.bot.model.message.flex.unit.FlexAlign;
 import com.linecorp.bot.model.message.flex.unit.FlexFontSize;
 import com.linecorp.bot.model.message.flex.unit.FlexLayout;
@@ -15,40 +11,14 @@ import com.linecorp.bot.model.message.flex.unit.FlexMarginSize;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.function.Supplier;
 
-public class CheckInManagingDetailBubbleSupplier implements Supplier<Bubble> {
-    @Override
-    public Bubble get() {
-        return Bubble.builder()
-                .hero(createHeroBlock())
-                .body(createBodyBlock())
-                .footer(createFooterBlock())
-                .build();
-    }
+@BodyBlockImplementation(value = "check-in-detail-body")
+public class CheckInDetailBody implements BodyBlock<Box> {
 
-    private Room room;
     private Booking booking;
+    private Room room;
 
-    public CheckInManagingDetailBubbleSupplier(Booking booking) {
-        this.room = booking.getBookedRoom();
-        this.booking = booking;
-    }
-
-//    TODO: Split into a strategy
-
-    public Image createHeroBlock() {
-        return Image.builder()
-                .url(room.getRoomImageUrl())
-                .size(Image.ImageSize.FULL_WIDTH)
-                .aspectRatio(Image.ImageAspectRatio.R20TO13)
-                .aspectMode(Image.ImageAspectMode.Cover)
-                .build();
-    }
-
-//    TODO: Split into a strategy
-
+    @Override
     public Box createBodyBlock() {
         return Box.builder()
                 .layout(FlexLayout.VERTICAL)
@@ -97,21 +67,9 @@ public class CheckInManagingDetailBubbleSupplier implements Supplier<Bubble> {
                 .build();
     }
 
-//    TODO: Split in a strategy with text as a parameter.
-
-    public Box createFooterBlock() {
-        return Box.builder()
-                .layout(FlexLayout.VERTICAL)
-                .contents(Collections.singletonList(
-                        Button.builder()
-                                .action(PostbackAction.builder()
-                                        .label("Check In")
-                                        .data(String.format("action=perform-check-in&userId=%s&bookingId=%s", booking.getBookedByUserId(), booking.getId()))
-                                        .build())
-                                .color("#DF8D5F")
-                                .style(Button.ButtonStyle.PRIMARY)
-                                .build()
-                ))
-                .build();
+    public Box createBodyBlock(Booking booking) {
+        this.booking = booking;
+        this.room = booking.getBookedRoom();
+        return this.createBodyBlock();
     }
 }

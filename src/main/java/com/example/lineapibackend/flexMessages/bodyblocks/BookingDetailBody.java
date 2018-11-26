@@ -1,13 +1,11 @@
-package com.example.lineapibackend.flexMessages.RoomManagingDetail;
+package com.example.lineapibackend.flexMessages.bodyblocks;
+
 
 import com.example.lineapibackend.entity.Booking;
 import com.example.lineapibackend.entity.Room;
-import com.example.lineapibackend.flexMessages.blocks.BodyBlock;
-import com.example.lineapibackend.flexMessages.blocks.FooterBlock;
-import com.example.lineapibackend.flexMessages.blocks.HeroBlock;
-import com.linecorp.bot.model.action.PostbackAction;
-import com.linecorp.bot.model.message.flex.component.*;
-import com.linecorp.bot.model.message.flex.container.Bubble;
+import com.linecorp.bot.model.message.flex.component.Box;
+import com.linecorp.bot.model.message.flex.component.Icon;
+import com.linecorp.bot.model.message.flex.component.Text;
 import com.linecorp.bot.model.message.flex.unit.FlexAlign;
 import com.linecorp.bot.model.message.flex.unit.FlexFontSize;
 import com.linecorp.bot.model.message.flex.unit.FlexLayout;
@@ -15,37 +13,12 @@ import com.linecorp.bot.model.message.flex.unit.FlexMarginSize;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.function.Supplier;
 
-public class RoomManagingDetailBubbleSupplier implements Supplier<Bubble>, RoomManagingDetail  {
-    @Override
-    public Bubble get() {
-        return Bubble.builder()
-                .hero(createHeroBlock())
-                .body(createBodyBlock())
-                .footer(createFooterBlock())
-                .build();
-    }
+@BodyBlockImplementation(value = "booking-detail-body")
+public class BookingDetailBody implements BodyBlock<Box> {
 
     private Room room;
     private Booking booking;
-
-//TODO: Refactor constructor
-    public RoomManagingDetailBubbleSupplier(Booking booking) {
-        this.room = booking.getBookedRoom();
-        this.booking = booking;
-    }
-
-    @Override
-    public Image createHeroBlock() {
-        return Image.builder()
-                .url(room.getRoomImageUrl())
-                .size(Image.ImageSize.FULL_WIDTH)
-                .aspectRatio(Image.ImageAspectRatio.R20TO13)
-                .aspectMode(Image.ImageAspectMode.Cover)
-                .build();
-    }
 
     @Override
     public Box createBodyBlock() {
@@ -119,25 +92,10 @@ public class RoomManagingDetailBubbleSupplier implements Supplier<Bubble>, RoomM
                 .build();
     }
 
-    @Override
-    public Box createFooterBlock() {
-        return Box.builder()
-                .layout(FlexLayout.VERTICAL)
-                .contents(Collections.singletonList(
-                        Button.builder()
-                                .action(PostbackAction.builder()
-                                        .label("Cancel Booking")
-                                        .data(String.format("action=cancel-booking&userId=%s&bookingId=%s", booking.getBookedByUserId(), booking.getId()))
-                                        .build())
-                                .color("#DF8D5F")
-                                .style(Button.ButtonStyle.PRIMARY)
-                                .build()
-                ))
-                .build();
+    public Box createBodyBlock(Booking booking) {
+        this.booking = booking;
+        this.room = booking.getBookedRoom();
+        return this.createBodyBlock();
     }
-}
 
-//new PostbackAction(
-//        "Cancel Booking"
-//        , "Canceling: " + booking.getId())
-//        )
+}

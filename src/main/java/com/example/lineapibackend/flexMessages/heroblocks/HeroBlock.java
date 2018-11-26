@@ -1,4 +1,4 @@
-package com.example.lineapibackend.flexMessages.blocks;
+package com.example.lineapibackend.flexMessages.heroblocks;
 
 import com.linecorp.bot.model.message.flex.component.FlexComponent;
 

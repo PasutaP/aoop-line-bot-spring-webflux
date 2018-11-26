@@ -1,16 +1,14 @@
 package com.example.lineapibackend.service.Room;
 
-import com.example.lineapibackend.entity.Booking;
 import com.example.lineapibackend.entity.Room;
-import com.example.lineapibackend.repository.BookingRepository;
 import com.example.lineapibackend.repository.RoomRepository;
-import com.example.lineapibackend.service.Booking.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.*;
+import java.util.Date;
+import java.util.List;
 
 
 @Service
@@ -18,12 +16,9 @@ public class RoomServiceImpl implements RoomService {
 
     private final RoomRepository roomRepository;
 
-    private final BookingService bookingService;
-
     @Autowired
-    public RoomServiceImpl(RoomRepository roomRepository, BookingService bookingService) {
+    public RoomServiceImpl(RoomRepository roomRepository) {
         this.roomRepository = roomRepository;
-        this.bookingService = bookingService;
     }
 
 //    TODO: RoomService Methods implementation
@@ -36,8 +31,7 @@ public class RoomServiceImpl implements RoomService {
 //    TODO: Resolve this magic
     @Override
     public Mono<Room> updateRoom(Room room, String id) {
-        return findById(id)
-                .doOnSuccess(roomRepository::save)
+        return roomRepository.save(room)
                 .switchIfEmpty(Mono.error(new Exception("No room found with id: " + id)));
     }
 

@@ -1,0 +1,25 @@
+package com.example.lineapibackend.flexMessages.heroblocks;
+
+import com.example.lineapibackend.entity.Room;
+import com.linecorp.bot.model.message.flex.component.Image;
+
+@HeroBlockImplementation(value = "room-image-hero")
+public class RoomImageHero implements HeroBlock<Image> {
+
+    private Room room;
+
+    public Image createHeroBlock(Room room) {
+        this.room = room;
+        return this.createHeroBlock();
+    }
+
+    @Override
+    public Image createHeroBlock() {
+        return Image.builder()
+                .url(this.room.getRoomImageUrl())
+                .size(Image.ImageSize.FULL_WIDTH)
+                .aspectMode(Image.ImageAspectMode.Cover)
+                .aspectRatio(Image.ImageAspectRatio.R20TO13)
+                .build();
+    }
+}
