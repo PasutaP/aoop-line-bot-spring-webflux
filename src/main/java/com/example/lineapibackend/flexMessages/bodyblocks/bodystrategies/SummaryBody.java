@@ -1,7 +1,9 @@
-package com.example.lineapibackend.flexMessages.bodyblocks;
+package com.example.lineapibackend.flexMessages.bodyblocks.bodystrategies;
 
 import com.example.lineapibackend.entity.Booking;
 import com.example.lineapibackend.entity.Room;
+import com.example.lineapibackend.flexMessages.bodyblocks.BodyBlock;
+import com.example.lineapibackend.flexMessages.bodyblocks.BodyBlockImplementation;
 import com.linecorp.bot.model.message.flex.component.Box;
 import com.linecorp.bot.model.message.flex.component.Separator;
 import com.linecorp.bot.model.message.flex.component.Text;

@@ -1,6 +1,8 @@
-package com.example.lineapibackend.flexMessages.footerblocks;
+package com.example.lineapibackend.flexMessages.footerblocks.footerstrategies;
 
 import com.example.lineapibackend.entity.Booking;
+import com.example.lineapibackend.flexMessages.footerblocks.FooterBlock;
+import com.example.lineapibackend.flexMessages.footerblocks.FooterBlockImplementation;
 import com.linecorp.bot.model.action.PostbackAction;
 import com.linecorp.bot.model.message.flex.component.Box;
 import com.linecorp.bot.model.message.flex.component.Button;

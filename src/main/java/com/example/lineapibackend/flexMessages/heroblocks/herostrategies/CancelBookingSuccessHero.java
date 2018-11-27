@@ -1,5 +1,7 @@
-package com.example.lineapibackend.flexMessages.heroblocks;
+package com.example.lineapibackend.flexMessages.heroblocks.herostrategies;
 
+import com.example.lineapibackend.flexMessages.heroblocks.HeroBlock;
+import com.example.lineapibackend.flexMessages.heroblocks.HeroBlockImplementation;
 import com.linecorp.bot.model.message.flex.component.Image;
 
 @HeroBlockImplementation(value = "cancel-booking-success-hero")
